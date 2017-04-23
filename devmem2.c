@@ -42,6 +42,30 @@
 #define FATAL do { fprintf(stderr, "Error at line %d, file %s (%d) [%s]\n", \
   __LINE__, __FILE__, errno, strerror(errno)); exit(1); } while(0)
 
+
+// based on...
+// http://stackoverflow.com/a/3974138/3152071
+
+//assumes little endian
+
+void int2binstr(char *buffer, size_t const size, void const * const ptr)
+{
+    unsigned char *b = (unsigned char*) ptr;
+    unsigned char byte;
+    int i, j;
+
+    for (i=size-1;i>=0;i--)
+    {
+        for (j=7;j>=0;j--)
+        {
+            byte = (b[i] >> j) & 1;
+            *buffer = '0' + byte;
+            buffer++;
+        }
+    }
+    *buffer = 0x00;	// null terminal string
+}
+
 #define MAP_SIZE 4096UL
 #define MAP_MASK (MAP_SIZE - 1)
 
@@ -51,6 +75,8 @@ int main(int argc, char **argv) {
     unsigned long read_result, writeval;
     off_t target;
     int access_type = 'w';
+
+    char binstrbuffer[ (sizeof( unsigned long )*8) + 1]; // 8 bits per byte, plus null terminator
 
     if(argc < 2) {
         fprintf(stderr, "\nUsage:\t%s { address } [ type [ data ] ]\n"
@@ -91,7 +117,9 @@ int main(int argc, char **argv) {
             fprintf(stderr, "Illegal data type '%c'.\n", access_type);
             exit(2);
     }
-    printf("Value at address 0x%llx (%p): 0x%lu\n", (long long)target, virt_addr, read_result);
+
+    int2binstr( binstrbuffer , sizeof(  read_result ) , &read_result );
+    printf("Value at address 0x%llx (%p): 0x%08x (0b%s)\n", (long long)target, virt_addr, read_result , binstrbuffer);
     fflush(stdout);
 
     if(argc > 3) {
