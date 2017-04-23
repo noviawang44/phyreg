@@ -99,10 +99,15 @@ int main(int argc, char **argv) {
     /* Map one page */
     map_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, target & ~MAP_MASK);
     if(map_base == (void *) -1) FATAL;
+
     printf("Memory mapped at address %p.\n", map_base);
-    fflush(stdout);
 
     virt_addr = map_base + (target & MAP_MASK);
+
+    printf("Address 0x%llx (%p):\n", (long long)target, virt_addr );
+    fflush(stdout);
+
+
     switch(access_type) {
         case 'b':
             read_result = *((unsigned char *) virt_addr);
@@ -119,7 +124,7 @@ int main(int argc, char **argv) {
     }
 
     int2binstr( binstrbuffer , sizeof(  read_result ) , &read_result );
-    printf("Value at address 0x%llx (%p): 0x%08x (0b%s)\n", (long long)target, virt_addr, read_result , binstrbuffer);
+    printf("Read    : 0x%08lx 0b%s\n" , read_result , binstrbuffer );
     fflush(stdout);
 
     if(argc > 3) {
@@ -138,9 +143,16 @@ int main(int argc, char **argv) {
                 read_result = *((unsigned long *) virt_addr);
                 break;
         }
-        printf("Written 0x%lu; readback 0x%lu\n", writeval, read_result);
+
+        int2binstr( binstrbuffer , sizeof(  writeval ) , &writeval );
+        printf("Written : 0x%08lx 0b%s\n" , writeval , binstrbuffer );
+
+        int2binstr( binstrbuffer , sizeof(  read_result ) , &read_result );
+        printf("Readback: 0x%08lx 0b%s\n" , read_result , binstrbuffer );
+
         fflush(stdout);
     }
+
 
     if(munmap(map_base, MAP_SIZE) == -1) FATAL;
     close(fd);
