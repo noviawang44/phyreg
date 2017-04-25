@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
     if(argc < 2) {
         fprintf(stderr, "\nUsage:\t%s { address } [ type [ data ] ]\n"
             "\taddress : memory address to act upon\n"
-            "\ttype    : access operation type : [b]yte, [h]alfword, [w]ord \n"
+            "\ttype    : access operation type : [b]yte, [h]alfword, [w]ord\n"
             "\tdata    : data to be written\n\n",
             argv[0]);
         exit(1);
@@ -95,14 +95,14 @@ int main(int argc, char **argv) {
 
 
     if((fd = open("/dev/mem", O_RDWR | O_SYNC)) == -1) FATAL;
-//    printf("/dev/mem opened.\n");
+    printf("/dev/mem opened.\n");
     fflush(stdout);
 
     /* Map one page */
     map_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, target & ~MAP_MASK);
     if(map_base == (void *) -1) FATAL;
 
-//    printf("Memory mapped at address %p.\n", map_base);
+    printf("Memory mapped at address %p.\n", map_base);
 
     virt_addr = map_base + (target & MAP_MASK);
 
