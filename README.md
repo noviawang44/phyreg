@@ -1,12 +1,11 @@
-# devmem2
-Program to read/write from/to any location in memory (from lartware, 2004).
+# phyreg
 
-Homepage: http://www.lartmaker.nl/lartware/port/
+This is a utility to make it easy to interact with the PHY(s) attached to the MDIO bus from usermode under linux.
 
-Useful on ARM, especially on TI and other platforms with GPIO (eg,
-beaglebone, raspberrypi).  Seems to be required by TI SGX/PowerVR
-graphics and related tools.
+It is intended for debuging PHY issues, and experiementing with register settings. 
 
-This is just the upstream code with some cleanups and a simple
-Makefile for Gentoo and OpenEmbedded.  To compile by hand, just
-set CC and CFLAGS on the make command-line.
+It therefore must be run with rights to  `/dev/mem`  get direct accesss to the MDIO bus. 
+
+# Show all attached PHYs (bnased on reports from the MDIO subsystem)
+
+`
