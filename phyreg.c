@@ -125,16 +125,16 @@ void unmap_base( unsigned *map_base ) {
 
 void printbits( unsigned u ) {
 	
-	unsigned mask = (1<<(15) );		// Step though the bits
-	
+
 	int bit = 16;
 	
 	while (bit) {
+		
 		bit--;
 		
 		printf( (u & (1<<bit) ) ? "1" : "0");
 		
-		if ( bit && ((bit % 4) == 0) ) printf("-");		// make easier to read bybreaking into nibbles (but suppress trailing -)
+		if (  ((bit % 4) == 0) && (bit>0) ) printf("-");		// make easier to read bybreaking into nibbles (but suppress trailing -)
 		
 	}	
 	
