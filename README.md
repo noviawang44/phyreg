@@ -115,3 +115,9 @@ make install
 ## Background
 
 This code was orginally based on the `devmem2` utility, but has almost none of that code in it anymore. There is an included fork of `devemem2` that fixes some of the bugs in the orginal. 
+
+I wrote this utility to help debug this bear of an issue on the BeagleBone that causes it to power up without network connectivity sometimes...
+
+https://groups.google.com/forum/#!topic/beagleboard/9mctrG26Mc8%5B1-25%5D
+
+As of 4/26/17, this problem remains unsolved. If you are an expert in the LAN8710A PHY and want to help, many people (including me!) would be forever greateful. This is a tough problem. 
