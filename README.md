@@ -103,6 +103,15 @@ PHY=00 REG=31 : IDLE READ  ACK 0001-0000-0101-1000
 
 This is just a short cut for manually reading each register one at a time, and it hand for doing a diff to see which registers changed. 
 
+## Install
+
+```
+git clone https://github.com/bigjosh/phyreg
+cd phyreg
+make
+make install
+```
+
 ## Background
 
 This code was orginally based on the `devmem2` utility, but has almost none of that code in it anymore. There is an included fork of `devemem2` that fixes some of the bugs in the orginal. 
