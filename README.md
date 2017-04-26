@@ -115,7 +115,20 @@ make install
 ## FAQ 
 
 Q: Doesn't the driver keep reseting the values while you are playing with them?
+
 A: The driver seems to only know about the standard bottom 7 registers, so will not mess with stuff you are doing to others. To be safe, I usually will move the PHY to a different address before I start messing with it so that linux can not find it (the driver only looks for the address once at startup). 
+
+Q: What does `IDLE READ ACK` mean?
+
+A: These are status messages printed as the tool runs the sequence to access the register.
+
+It prints `IDLE` when it finds the MDIO bus idle, or else it will print `WAIT` while it wait for it to be idle. 
+It prints `READ` when it issues the read command (`GO` in the MDIO lingo).
+It prints `ACK ` when it seen the `ACK` bit set showing that the read completed and the data is ready. 
+
+It usually prints these so fast that you can't see any delay between them. 
+
+If it gets stuck in any of these states then either there is something wrong with the bus, the PHY, or you are trying to talk to a PHY that doesn't exist (or at least respond). 
 
 ## Background
 
