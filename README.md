@@ -112,6 +112,11 @@ make
 make install
 ```
 
+## FAQ 
+
+Q: Doesn't the driver keep reseting the values while you are playing with them?
+A: The driver seems to only know about the standard bottom 7 registers, so will not mess with stuff you are doing to others. To be safe, I usually will move the PHY to a different address before I start messing with it so that linux can not find it (the driver only looks for the address once at startup). 
+
 ## Background
 
 This code was orginally based on the `devmem2` utility, but has almost none of that code in it anymore. There is an included fork of `devemem2` that fixes some of the bugs in the orginal. 
