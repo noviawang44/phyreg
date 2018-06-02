@@ -44,7 +44,7 @@
 
 #include <string.h>
 
-#define FATAL do { fprintf(stderr, "Error at line %d, file %s (%d) [%s]\n", \
+#define FATAL do { fprintf( stderr ,stderr, "Error at line %d, file %s (%d) [%s]\n", \
   __LINE__, __FILE__, errno, strerror(errno)); exit(1); } while(0)
 
 
@@ -132,9 +132,9 @@ void printbits( unsigned u ) {
 		
 		bit--;
 		
-		printf( (u & (1<<bit) ) ? "1" : "0");
+		fprintf( stderr , (u & (1<<bit) ) ? "1" : "0");
 		
-		if (  ((bit % 4) == 0) && (bit>0) ) printf("-");		// make easier to read bybreaking into nibbles (but suppress trailing -)
+		if (  ((bit % 4) == 0) && (bit>0) ) fprintf( stderr ,"-");		// make easier to read bybreaking into nibbles (but suppress trailing -)
 		
 	}	
 	
@@ -157,13 +157,13 @@ void printbits( unsigned u ) {
 
 void printscan( const char *s , unsigned *address ) {
 	
-	//printf("add=%x\n",address);
+	//fprintf( stderr ,"add=%x\n",address);
 	
 	unsigned a = *address;		// read the array of bits fomr the MDIO controller
 	
-	printf( s );
+	fprintf( stderr , s );
 	printbits( a );
-	printf("\n");
+	fprintf( stderr ,"\n");
 	
 }
 
@@ -184,22 +184,23 @@ unsigned short parsebin( const char *s ) {
 }
 
 // Will write writeval if flag is set
+// returns register contents (before write if write specified)
 
-void accessreg( unsigned *useraccessaddress , unsigned short phy_address, unsigned short reg , unsigned char writeflag , unsigned writeval ) {
-	printf("PHY=%2.02d REG=%2.02d : ");
+int accessreg( unsigned *useraccessaddress , unsigned short phy_address, unsigned short reg , unsigned char writeflag , unsigned writeval ) {
+	fprintf( stderr ,"PHY=%2.02d REG=%2.02d : " , phy_address , reg );
 	
 	if ( *useraccessaddress & MDIO_USERACCESS0_GO_BIT ) {
-		printf("WAIT ");
+		fprintf( stderr ,"WAIT ");
 		while (*useraccessaddress & MDIO_USERACCESS0_GO_BIT);
 	} else {
-		printf("IDLE ");
+		fprintf( stderr ,"IDLE ");
 	}
 
 	if (writeflag) {
-		printf( "WRITE ");
+		fprintf( stderr , "WRITE ");
 		*useraccessaddress = MDIO_USERACCESS0_GO_BIT | MDIO_USERACCESS0_WRITE_BIT | (reg << 21) | (phy_address << 16) | writeval;	// Send the  command as defined by 14.5.10.11 in TRM		
 	} else {
-		printf( "READ  ");		
+		fprintf( stderr , "READ  ");		
 		*useraccessaddress = MDIO_USERACCESS0_GO_BIT |                              (reg << 21) | (phy_address << 16);			// Send the actual read command as defined by 14.5.10.11 in TRM
 	}
 	
@@ -208,36 +209,45 @@ void accessreg( unsigned *useraccessaddress , unsigned short phy_address, unsign
 	while (*useraccessaddress & MDIO_USERACCESS0_GO_BIT);
 	
 	if ( *useraccessaddress & MDIO_USERACCESS0_ACK_BIT ) {
-		printf("ACK ");
+		fprintf( stderr ,"ACK ");
 		while (*useraccessaddress & MDIO_USERACCESS0_GO_BIT);
 	} else {
-		printf("NAK ");
+		fprintf( stderr ,"NAK ");
 	}
-			
-	printbits( *useraccessaddress );			// THe bottom 16 bits are the read value
+	
+	int data = 	 *useraccessaddress ;			// THe bottom 16 bits are the read value
+	
+	printbits( data );
 	
 	if (writeflag) {
-		printf( " (DATA " );
-		printbits( writeval);
-		printf(")");
+		fprintf( stderr , " (WROTE %d) " , writeval );
 	}
-	printf("\n");
+	fprintf( stderr ,"\n");
+	
+	return data; 
 	
 }
 
-void readreg( unsigned *useraccessaddress , unsigned short phy_address, unsigned short reg ) {
-	accessreg( useraccessaddress , phy_address , reg , 0, 0 );
+int readreg( unsigned *useraccessaddress , unsigned short phy_address, unsigned short reg ) {
+	return accessreg( useraccessaddress , phy_address , reg , 0, 0 );
 }
 
-void writereg( unsigned *useraccessaddress , unsigned short phy_address, unsigned short reg , unsigned short data ) {
-	accessreg( useraccessaddress , phy_address , reg , 1, data );
+int  writereg( unsigned *useraccessaddress , unsigned short phy_address, unsigned short reg , unsigned short data ) {
+	return accessreg( useraccessaddress , phy_address , reg , 1, data );
 }
 
 int main(int argc, char **argv) {
 	
     
     if(argc ==2 && !strcmp( argv[1] , "-?" )) {
-        fprintf(stderr, "\nUsage:phyreg  [address [reg [  data ] ]]\n"
+        fprintf( stderr, "\nUsage:phyreg [TEST reg bit] | [address [reg [  data ] ]]\n"
+			"To test a bit in a register ...\n"
+			"   reg     : register 0-31\n"
+			"   bit     : bit 0-31\n"			
+			"Automatically selects first PHY address found\n"
+			"Prints 0 or 1 to stdout\n"
+			"\n"
+			"To debug phy addresses & registers\n"			
             "   address : phy address to act upon, or scan addresses if none specified\n"
             "   reg     : phy register to act on  (if not spoecified, 0-31 will be dumped)\n"
             "   data    : optional 16 bits of data to be written to reg in format xxxx or bbbb-bbbb-bbbb-bbbb \n\n"
@@ -245,59 +255,97 @@ int main(int argc, char **argv) {
         exit(1);
     }
     
-	//printf("mapping\n");
+	//fprintf( stderr ,"mapping\n");
 	unsigned *mdiobase = map_base( MDIO_BASE_TARGET );
 	
 	if (!mdiobase) {
-		printf("mmap failed. Check stderr for reeason.\n");
+		fprintf( stderr ,"mmap failed. Check stderr for reeason.\n");
 		return(1);
 	}
 	
-	//printf("mapped\n");
+	//fprintf( stderr ,"mapped\n");
 
 	if (argc<2) {		// no command line args, go scan mode
     
 		printscan( "ALIVE ADDRESSES:" , OFFSET_PTR( mdiobase , MDIO_ALIVE_OFFSET ) );
 		printscan( "LINK  ADDRESSES:" , OFFSET_PTR( mdiobase , MDIO_LINK_OFFSET  ) );
-		printf("Try -? for usage.\n");
+		fprintf( stderr ,"Try -? for usage.\n");
 		
 	} else {
 		
-		int phy_address = atoi( argv[1] );
-		
-		if (argc<3) {		// No reg specified, dump all
-		
-			int r;
+		if ( ( argc == 4) && !strcasecmp( argv[1] , "TEST" ) ) {
 			
-			for(r=0; r<32; r++ ) {
-
-				readreg( OFFSET_PTR( mdiobase , MDIO_USERACCESS0_OFFSET) , phy_address , r );
-				
+			// Find address of first phy 
+			
+			unsigned alivebits =  *OFFSET_PTR( mdiobase , MDIO_ALIVE_OFFSET );
+			
+			fprintf( stderr , "Alive bits:");			
+			printbits( alivebits);
+			fprintf( stderr , "\n");			
+			
+			int phy_address=0; 
+			
+			while ( phy_address < 32 && (( alivebits & (1<<phy_address ))== 0 ) ) {				
+				phy_address++;
 			}
+			
+			
+			
+			if (phy_address==32) {
+				fprintf( stderr , "No PHY at all found!\n");
+				fprintf( stdout ,"0\n");
+			} else {
+				
+				fprintf( stderr , "First PHY found at address %d.\n" , phy_address);
+			
+				int phy_reg = atoi( argv[2] );
+				int phy_bit = atoi( argv[3] );				
+				
+				if ( readreg( OFFSET_PTR( mdiobase , MDIO_USERACCESS0_OFFSET) , phy_address , phy_reg ) & (1<<phy_bit) ) {
+					fprintf( stdout ,"1");
+				} else {
+					fprintf( stdout ,"0\n");
+				}
+			}
+			
 		} else {
 			
-			int phy_reg = atoi( argv[2] );
+			int phy_address = atoi( argv[1] );
 			
-			if (argc < 4 ) {	// Read specified reg
+			if (argc<3) {		// No reg specified, dump all
+			
+				int r;
+				
+				for(r=0; r<32; r++ ) {
+
+					readreg( OFFSET_PTR( mdiobase , MDIO_USERACCESS0_OFFSET) , phy_address , r )  ;
 					
-				readreg( OFFSET_PTR( mdiobase , MDIO_USERACCESS0_OFFSET) , phy_address , phy_reg );
-				
-			} else {			// Write
-			
-				const char *datastr = argv[3];
-						
-				int data;
-				
-				if (strlen(datastr) == 4) {	// Parse as hex
-					data= (short unsigned) strtol( datastr , NULL , 16); 
-				} else {	// parse as bin
-					data=parsebin( datastr );
 				}
-			
-				writereg( OFFSET_PTR( mdiobase , MDIO_USERACCESS0_OFFSET) , phy_address , phy_reg , data );
+			} else {
+				
+				int phy_reg = atoi( argv[2] );
+				
+				if (argc < 4 ) {	// Read specified reg
+						
+					readreg( OFFSET_PTR( mdiobase , MDIO_USERACCESS0_OFFSET) , phy_address , phy_reg ) ;
+					
+				} else {			// Write
+				
+					const char *datastr = argv[3];
+							
+					int data;
+					
+					if (strlen(datastr) == 4) {	// Parse as hex
+						data= (short unsigned) strtol( datastr , NULL , 16); 
+					} else {	// parse as bin
+						data=parsebin( datastr );
+					}
+				
+					writereg( OFFSET_PTR( mdiobase , MDIO_USERACCESS0_OFFSET) , phy_address , phy_reg , data );
+					
+				}
 				
 			}
-			
 		}
     }
 
