@@ -186,7 +186,7 @@ unsigned short parsebin( const char *s ) {
 // Will write writeval if flag is set
 // returns register contents (before write if write specified)
 
-int accessreg( unsigned *useraccessaddress , unsigned short phy_address, unsigned short reg , unsigned char writeflag , unsigned writeval ) {
+int accessreg( volatile unsigned *useraccessaddress , unsigned short phy_address, unsigned short reg , unsigned char writeflag , unsigned writeval ) {
 	fprintf( stderr ,"PHY=%2.02d REG=%2.02d : " , phy_address , reg );
 	
 	if ( *useraccessaddress & MDIO_USERACCESS0_GO_BIT ) {
