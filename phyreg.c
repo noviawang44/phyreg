@@ -228,11 +228,11 @@ int accessreg( volatile unsigned *useraccessaddress , unsigned short phy_address
 	
 }
 
-int readreg( unsigned *useraccessaddress , unsigned short phy_address, unsigned short reg ) {
+int readreg( volatile unsigned *useraccessaddress , unsigned short phy_address, unsigned short reg ) {
 	return accessreg( useraccessaddress , phy_address , reg , 0, 0 );
 }
 
-int  writereg( unsigned *useraccessaddress , unsigned short phy_address, unsigned short reg , unsigned short data ) {
+int  writereg( volatile unsigned *useraccessaddress , unsigned short phy_address, unsigned short reg , unsigned short data ) {
 	return accessreg( useraccessaddress , phy_address , reg , 1, data );
 }
 
