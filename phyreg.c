@@ -101,7 +101,7 @@ volatile unsigned *map_base( unsigned target )  {
 
     /* Map one page */
     
-    volatile unsigned *map_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, target );
+    volatile unsigned *map_base = (volatile unsigned *) mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, target );
     
     if (map_base == (void *) -1) {
 	    fprintf( stderr , "MMAP FAILED.\r\n");
