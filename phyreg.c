@@ -256,7 +256,7 @@ int main(int argc, char **argv) {
     }
     
 	//fprintf( stderr ,"mapping\n");
-	unsigned *mdiobase = map_base( MDIO_BASE_TARGET );
+	volatile unsigned *mdiobase = map_base( MDIO_BASE_TARGET );
 	
 	if (!mdiobase) {
 		fprintf( stderr ,"mmap failed. Check stderr for reeason.\n");
