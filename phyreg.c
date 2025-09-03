@@ -115,7 +115,7 @@ volatile unsigned *map_base( unsigned target )  {
 	
 }
 
-void unmap_base( unsigned *map_base ) {
+void unmap_base( volatile unsigned *map_base ) {
     if(munmap(map_base, MAP_SIZE) == -1) {
 	    		fprintf( stderr , "unmapped failed!.\r\n");
     }
