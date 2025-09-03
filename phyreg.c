@@ -155,11 +155,11 @@ void printbits( unsigned u ) {
 // We need this becuase pointer arithmatic on unsigned * goes by 4's
 #define OFFSET_PTR( base , offset ) ( base + (offset/sizeof( *base) )) 
 
-void printscan( const char *s , unsigned *address ) {
+void printscan( const char *s , volatile unsigned *address ) {
 	
 	//fprintf( stderr ,"add=%x\n",address);
 	
-	unsigned a = *address;		// read the array of bits fomr the MDIO controller
+	volatile unsigned a = *address;		// read the array of bits fomr the MDIO controller
 	
 	fprintf( stderr , s );
 	printbits( a );
