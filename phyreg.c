@@ -80,7 +80,7 @@ void int2binstr(char *buffer, size_t const size, void const * const ptr)
 // Map an ARM base address to a pointer we can use via devmem
 // Must be on a page boundary
 
-unsigned *map_base( unsigned target )  {
+volatile unsigned *map_base( unsigned target )  {
 	
 	if ( target != (target & ~MAP_MASK )  ) {
 		fprintf( stderr , "Base address must be on boundary,.\r\n");
@@ -277,7 +277,7 @@ int main(int argc, char **argv) {
 			
 			// Find address of first phy 
 			
-			unsigned alivebits =  *OFFSET_PTR( mdiobase , MDIO_ALIVE_OFFSET );
+			volatile unsigned alivebits =  *OFFSET_PTR( mdiobase , MDIO_ALIVE_OFFSET );
 			
 			fprintf( stderr , "Alive bits:");			
 			printbits( alivebits);
