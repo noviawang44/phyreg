@@ -191,7 +191,9 @@ int accessreg( volatile unsigned *useraccessaddress , unsigned short phy_address
 	
 	if ( *useraccessaddress & MDIO_USERACCESS0_GO_BIT ) {
 		fprintf( stderr ,"WAIT ");
-		while (*useraccessaddress & MDIO_USERACCESS0_GO_BIT);
+		while (*useraccessaddress & MDIO_USERACCESS0_GO_BIT){
+			usleep(1);
+		};
 	} else {
 		fprintf( stderr ,"IDLE ");
 	}
@@ -206,11 +208,15 @@ int accessreg( volatile unsigned *useraccessaddress , unsigned short phy_address
 	
 	// Now wait for the MDIO transaction to complete
 
-	while (*useraccessaddress & MDIO_USERACCESS0_GO_BIT);
+	while (*useraccessaddress & MDIO_USERACCESS0_GO_BIT){
+		usleep(1);
+	};
 	
 	if ( *useraccessaddress & MDIO_USERACCESS0_ACK_BIT ) {
 		fprintf( stderr ,"ACK ");
-		while (*useraccessaddress & MDIO_USERACCESS0_GO_BIT);
+		while (*useraccessaddress & MDIO_USERACCESS0_GO_BIT){
+			usleep(1);
+		};
 	} else {
 		fprintf( stderr ,"NAK ");
 	}
