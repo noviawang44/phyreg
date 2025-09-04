@@ -47,6 +47,9 @@
 #define FATAL do { fprintf( stderr ,stderr, "Error at line %d, file %s (%d) [%s]\n", \
   __LINE__, __FILE__, errno, strerror(errno)); exit(1); } while(0)
 
+void memory_barrier(void) {
+	__sync_synchronize();
+}
 
 // based on...
 // http://stackoverflow.com/a/3974138/3152071
@@ -102,6 +105,7 @@ volatile unsigned *map_base( unsigned target )  {
     /* Map one page */
     
     volatile unsigned *map_base = (volatile unsigned *) mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, target );
+	memory_barrier(); // Ensure we read the latest value
     
     if (map_base == (void *) -1) {
 	    fprintf( stderr , "MMAP FAILED.\r\n");
@@ -160,6 +164,7 @@ void printscan( const char *s , volatile unsigned *address ) {
 	//fprintf( stderr ,"add=%x\n",address);
 	
 	volatile unsigned a = *address;		// read the array of bits fomr the MDIO controller
+	memory_barrier(); // Ensure we read the latest value
 	
 	fprintf( stderr , s );
 	printbits( a );
@@ -189,10 +194,12 @@ unsigned short parsebin( const char *s ) {
 int accessreg( volatile unsigned *useraccessaddress , unsigned short phy_address, unsigned short reg , unsigned char writeflag , unsigned writeval ) {
 	fprintf( stderr ,"PHY=%2.02d REG=%2.02d : " , phy_address , reg );
 	
+	memory_barrier(); // Ensure we see the latest value
 	if ( *useraccessaddress & MDIO_USERACCESS0_GO_BIT ) {
 		fprintf( stderr ,"WAIT ");
 		while (*useraccessaddress & MDIO_USERACCESS0_GO_BIT){
 			usleep(1);
+			memory_barrier(); // Ensure we see the latest value
 		};
 	} else {
 		fprintf( stderr ,"IDLE ");
@@ -200,28 +207,32 @@ int accessreg( volatile unsigned *useraccessaddress , unsigned short phy_address
 
 	if (writeflag) {
 		fprintf( stderr , "WRITE ");
-		*useraccessaddress = MDIO_USERACCESS0_GO_BIT | MDIO_USERACCESS0_WRITE_BIT | (reg << 21) | (phy_address << 16) | writeval;	// Send the  command as defined by 14.5.10.11 in TRM		
+		*useraccessaddress = MDIO_USERACCESS0_GO_BIT | MDIO_USERACCESS0_WRITE_BIT | (reg << 21) | (phy_address << 16) | writeval;	// Send the  command as defined by 14.5.10.11 in TRM
 	} else {
-		fprintf( stderr , "READ  ");		
-		*useraccessaddress = MDIO_USERACCESS0_GO_BIT |                              (reg << 21) | (phy_address << 16);			// Send the actual read command as defined by 14.5.10.11 in TRM
+		fprintf( stderr , "READ  ");
+		*useraccessaddress = MDIO_USERACCESS0_GO_BIT |                              (reg << 21) | (phy_address << 16);// Send the actual read command as defined by 14.5.10.11 in TRM
 	}
+	memory_barrier(); // Ensure write completes before continuing
 	
 	// Now wait for the MDIO transaction to complete
 
 	while (*useraccessaddress & MDIO_USERACCESS0_GO_BIT){
 		usleep(1);
+		memory_barrier(); // Ensure we see the latest value
 	};
 	
 	if ( *useraccessaddress & MDIO_USERACCESS0_ACK_BIT ) {
 		fprintf( stderr ,"ACK ");
 		while (*useraccessaddress & MDIO_USERACCESS0_GO_BIT){
 			usleep(1);
+			memory_barrier(); // Ensure we see the latest value
 		};
 	} else {
 		fprintf( stderr ,"NAK ");
 	}
 	
-	int data = 	 *useraccessaddress ;			// THe bottom 16 bits are the read value
+	int data =   *useraccessaddress ;		// The bottom 16 bits are the read value
+	memory_barrier(); // Ensure we read the latest value
 	
 	printbits( data );
 	
@@ -265,7 +276,7 @@ int main(int argc, char **argv) {
 	volatile unsigned *mdiobase = map_base( MDIO_BASE_TARGET );
 	
 	if (!mdiobase) {
-		fprintf( stderr ,"mmap failed. Check stderr for reeason.\n");
+		fprintf( stderr ,"mmap failed. Check stderr for reason.\n");
 		return(1);
 	}
 	
@@ -273,6 +284,7 @@ int main(int argc, char **argv) {
 
 	if (argc<2) {		// no command line args, go scan mode
     
+		memory_barrier(); // Ensure we read the latest value
 		printscan( "ALIVE ADDRESSES:" , OFFSET_PTR( mdiobase , MDIO_ALIVE_OFFSET ) );
 		printscan( "LINK  ADDRESSES:" , OFFSET_PTR( mdiobase , MDIO_LINK_OFFSET  ) );
 		fprintf( stderr ,"Try -? for usage.\n");
@@ -283,9 +295,11 @@ int main(int argc, char **argv) {
 			
 			// Find address of first phy 
 			
+			memory_barrier(); // Ensure we read the latest value
 			volatile unsigned alivebits =  *OFFSET_PTR( mdiobase , MDIO_ALIVE_OFFSET );
 			
-			fprintf( stderr , "Alive bits:");			
+			fprintf( stderr , "Alive bits:");
+			memory_barrier(); // Ensure we read the latest value			
 			printbits( alivebits);
 			fprintf( stderr , "\n");			
 			
