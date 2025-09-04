@@ -207,10 +207,10 @@ int accessreg( volatile unsigned *useraccessaddress , unsigned short phy_address
 
 	if (writeflag) {
 		fprintf( stderr , "WRITE ");
-		*useraccessaddress = MDIO_USERACCESS0_GO_BIT | MDIO_USERACCESS0_WRITE_BIT | (reg << 21) | (phy_address << 16) | writeval;
+		*useraccessaddress = MDIO_USERACCESS0_GO_BIT | MDIO_USERACCESS0_WRITE_BIT | (reg << 21) | (phy_address << 16) | writeval;	// Send the  command as defined by 14.5.10.11 in TRM
 	} else {
 		fprintf( stderr , "READ  ");
-		*useraccessaddress = MDIO_USERACCESS0_GO_BIT |                              (reg << 21) | (phy_address << 16);
+		*useraccessaddress = MDIO_USERACCESS0_GO_BIT |                              (reg << 21) | (phy_address << 16);// Send the actual read command as defined by 14.5.10.11 in TRM
 	}
 	memory_barrier(); // Ensure write completes before continuing
 	
